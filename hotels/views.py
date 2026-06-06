@@ -14,7 +14,10 @@ class HotelAPIView(APIView):
     def get(self, request):
 
         try:
-            hotel = request.user.hotel
+            # hotel = request.user.hotel
+            hotel = Hotel.objects.get(
+                owner=request.user
+            )
             serializer = HotelSerializer(hotel)
 
             return Response(serializer.data)
@@ -52,7 +55,9 @@ class HotelAPIView(APIView):
 
     def put(self, request):
 
-        hotel = request.user.hotel
+        hotel = Hotel.objects.get(
+            owner=request.user
+        )
 
         serializer = HotelSerializer(
             hotel,

@@ -1,13 +1,20 @@
-from rest_framework.routers import DefaultRouter
-from .views import HousekeepingTaskViewSet
+from django.urls import path
 
-
-router = DefaultRouter()
-
-router.register(
-    "housekeeping",
-    HousekeepingTaskViewSet,
-    basename="housekeeping"
+from .views import (
+    HousekeepingTaskListCreateAPIView,
+    HousekeepingTaskDetailAPIView,
 )
 
-urlpatterns = router.urls
+urlpatterns = [
+    path(
+        "housekeeping/",
+        HousekeepingTaskListCreateAPIView.as_view(),
+        name="housekeeping-list-create"
+    ),
+
+    path(
+        "housekeeping/<int:pk>/",
+        HousekeepingTaskDetailAPIView.as_view(),
+        name="housekeeping-detail"
+    ),
+]

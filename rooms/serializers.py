@@ -6,7 +6,20 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = "__all__"
+        fields = (
+            "id",
+            "room_number",
+            "floor",
+            "room_type",
+            "capacity",
+            "price_per_night",
+            "status",
+            "description",
+            "created_at",
+            "updated_at",
+        )
+        # read_only_fields = ["hotel"]
+
 
     def validate(self, attrs):
 

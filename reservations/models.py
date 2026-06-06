@@ -3,13 +3,32 @@ from django.db import models
 
 class Reservation(models.Model):
 
+
+    # STATUS_CHOICES = (
+    #     ("pending", "Pending"),
+    #     ("confirmed", "Confirmed"),
+    #     ("checked_in", "Checked In"),
+    #     ("checked_out", "Checked Out"),
+    #     ("cancelled", "Cancelled"),
+    # )
+
     STATUS_CHOICES = (
-        ("pending", "Pending"),
-        ("confirmed", "Confirmed"),
-        ("checked_in", "Checked In"),
-        ("checked_out", "Checked Out"),
-        ("cancelled", "Cancelled"),
+    ("reserved", "Reserved"),
+    ("checked_in", "Checked In"),
+    ("checked_out", "Checked Out"),
+    ("cancelled", "Cancelled"),
     )
+    payment_status = models.CharField(
+    max_length=20,
+    choices=(
+        ("unpaid", "Unpaid"),
+        ("partial", "Partial"),
+        ("paid", "Paid"),
+    ),
+    default="unpaid"
+    )
+
+
 
     hotel = models.ForeignKey(
         "hotels.Hotel",
@@ -36,7 +55,7 @@ class Reservation(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="pending"
+        default="reserved"
     )
 
     total_amount = models.DecimalField(

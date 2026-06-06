@@ -1,23 +1,102 @@
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.response import Response
+from rest_framework import status
 
 from .models import HousekeepingTask
 from .serializers import HousekeepingTaskSerializer
 
 
-class HousekeepingTaskViewSet(ModelViewSet):
+class HousekeepingTaskListCreateAPIView(APIView):
 
-    serializer_class = HousekeepingTaskSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get(self, request):
 
-        return HousekeepingTask.objects.filter(
-            hotel=self.request.user.hotel
+        tasks = HousekeepingTask.objects.filter(
+            hotel=request.user.hotel
         )
 
-    def perform_create(self, serializer):
+        serializer = HousekeepingTaskSerializer(
+            tasks,
+            many=True
+        )
 
-        serializer.save(
-            hotel=self.request.user.hotel
+        return Response(serializer.data)
+
+    def post(self, request):
+
+        serializer = HousekeepingTaskSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        task = serializer.save(
+            hotel=request.user.hotel
+        )
+
+        return Response(
+            HousekeepingTaskSerializer(task).data,
+            status=status.HTTP_201_CREATED
+        )
+class HousekeepingTaskDetailAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, request, pk):
+
+        return HousekeepingTask.objects.get(
+            pk=pk,
+            hotel=request.user.hotel
+        )
+
+    def get(self, request, pk):
+
+        task = self.get_object(
+            request,
+            pk
+        )
+
+        serializer = HousekeepingTaskSerializer(
+            task
+        )
+
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+
+        task = self.get_object(
+            request,
+            pk
+        )
+
+        serializer = HousekeepingTaskSerializer(
+            task,
+            data=request.data,
+            context={"request": request}
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+
+        task = self.get_object(
+            request,
+            pk
+        )
+
+        task.delete()
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
         )
