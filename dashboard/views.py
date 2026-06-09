@@ -71,7 +71,8 @@ class DashboardAPIView(APIView):
         pending_housekeeping_tasks = (
             HousekeepingTask.objects.filter(
                 room__hotel=hotel,
-                completed=False
+                status="pending"
+                # completed=False
             ).count()
         )
 
