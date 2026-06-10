@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from accounts.serializers import SignupSerializer, UserSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-
+from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -76,3 +76,31 @@ class MeAPIView(APIView):
 
         return Response(serializer.data)
     
+class LogoutAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        try:
+            refresh_token = request.data.get("refresh")
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Logged out successfully."
+                },
+                status=status.HTTP_200_OK
+            )
+
+        except TokenError:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Invalid or expired token."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
