@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from accounts.models import User
 from .models import StaffInvitation
 
 
@@ -36,3 +36,37 @@ class StaffInvitationSerializer(serializers.ModelSerializer):
             )
 
         return value
+class AcceptInvitationSerializer(
+    serializers.Serializer
+):
+
+    username = serializers.CharField(
+        max_length=150
+    )
+
+    password = serializers.CharField(
+        write_only=True
+    )
+
+    confirm_password = serializers.CharField(
+        write_only=True
+    )
+
+    def validate(self, attrs):
+
+        if (
+            attrs["password"] !=
+            attrs["confirm_password"]
+        ):
+            raise serializers.ValidationError(
+                "Passwords do not match."
+            )
+
+        if User.objects.filter(
+            username=attrs["username"]
+        ).exists():
+            raise serializers.ValidationError(
+                "Username already exists."
+            )
+
+        return attrs

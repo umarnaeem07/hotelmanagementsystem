@@ -4,6 +4,7 @@ from django.db import models
 class Staff(models.Model):
 
     ROLE_CHOICES = (
+        ("owner", "Owner"),
         ("manager", "Manager"),
         ("receptionist", "Receptionist"),
         ("housekeeping", "Housekeeping"),

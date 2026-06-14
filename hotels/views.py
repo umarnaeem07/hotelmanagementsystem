@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
+from staff.models import Staff
 from .models import Hotel
 from .serializers import HotelSerializer
 
@@ -46,6 +46,12 @@ class HotelAPIView(APIView):
 
         serializer.save(
             owner=request.user
+        )
+        # Automatically create owner staff profile
+        Staff.objects.create(
+            hotel=request.user.hotel,
+            user=request.user,
+            role="owner"
         )
 
         return Response(

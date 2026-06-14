@@ -3,8 +3,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-from .models import StaffInvitation
-from .serializers import StaffInvitationSerializer
+from .models import StaffInvitation ,Staff
+from .serializers import StaffInvitationSerializer, AcceptInvitationSerializer
+from accounts.models import User
 from django.core.mail import send_mail
 
 class StaffInvitationAPIView(APIView):
@@ -61,5 +62,73 @@ class StaffInvitationAPIView(APIView):
 
         return Response(
             StaffInvitationSerializer(invitation).data,
+            status=status.HTTP_201_CREATED
+        )
+class AcceptInvitationAPIView(APIView):
+
+    def post(self, request, token):
+
+        try:
+            invitation = (
+                StaffInvitation.objects.get(
+                    token=token
+                )
+            )
+
+        except StaffInvitation.DoesNotExist:
+
+            return Response(
+                {
+                    "message":
+                    "Invalid invitation link."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if invitation.accepted:
+
+            return Response(
+                {
+                    "message":
+                    "Invitation already used."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = (
+            AcceptInvitationSerializer(
+                data=request.data
+            )
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        user = User.objects.create_user(
+            username=serializer.validated_data[
+                "username"
+            ],
+            email=invitation.email,
+            password=serializer.validated_data[
+                "password"
+            ],
+            role=invitation.role
+        )
+
+        Staff.objects.create(
+            hotel=invitation.hotel,
+            user=user,
+            role=invitation.role
+        )
+
+        invitation.accepted = True
+        invitation.save()
+
+        return Response(
+            {
+                "message":
+                "Account created successfully."
+            },
             status=status.HTTP_201_CREATED
         )
