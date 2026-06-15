@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
-
+from django.utils import timezone
+from datetime import timedelta
+import uuid
 
 class CustomUserManager(UserManager):
 
@@ -48,3 +50,32 @@ class User(AbstractUser):
         return self.username
 
     REQUIRED_FIELDS = ["email"]
+    
+
+class PasswordResetToken(models.Model):
+
+    user = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="password_reset_tokens"
+    )
+
+    token = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    is_used = models.BooleanField(
+        default=False
+    )
+
+    def is_expired(self):
+        return (
+            timezone.now() >
+            self.created_at + timedelta(hours=1)
+        )
