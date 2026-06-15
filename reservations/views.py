@@ -5,11 +5,12 @@ from rest_framework import status
 from .models import Reservation
 from .serializers import ReservationSerializer
 from rest_framework.views import APIView
+from staff.permissions import IsReceptionistOrAbove
 
 
 class ReservationListCreateAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsReceptionistOrAbove]
 
     def get(self, request):
 
@@ -56,7 +57,7 @@ class ReservationListCreateAPIView(APIView):
         )
 class ReservationDetailAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsReceptionistOrAbove]
 
     def get_object(self, request, pk):
 
@@ -125,7 +126,7 @@ class ReservationDetailAPIView(APIView):
 
 class CheckInAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsReceptionistOrAbove]
 
     def post(self, request, pk):
 
@@ -159,7 +160,7 @@ class CheckInAPIView(APIView):
         )
 class CheckOutAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsReceptionistOrAbove]
 
     def post(self, request, pk):
 

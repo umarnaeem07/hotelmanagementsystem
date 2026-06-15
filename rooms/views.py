@@ -3,13 +3,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
+from staff.permissions import IsManagerOrOwner
+
 from .models import Room
 from .serializers import RoomSerializer
 
 
 class RoomListCreateAPIView(APIView):
         
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsManagerOrOwner]
 
     def get(self, request):
 
@@ -45,7 +47,7 @@ class RoomListCreateAPIView(APIView):
         )
 class RoomDetailAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsManagerOrOwner]
 
     def get_object(self, request, pk):
 

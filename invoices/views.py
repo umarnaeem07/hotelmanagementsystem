@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
+from staff.permissions import IsCashierOrOwner
 from reservations.models import Reservation
 
 from .models import Invoice
@@ -12,7 +12,7 @@ from .serializers import InvoiceSerializer
 
 class CreateInvoiceAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsCashierOrOwner]
 
     def post(self, request, reservation_id):
 
@@ -66,7 +66,7 @@ class CreateInvoiceAPIView(APIView):
         )
 class InvoiceDetailAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsCashierOrOwner]
 
     def get(self, request, pk):
 

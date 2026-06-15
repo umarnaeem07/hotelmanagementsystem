@@ -3,13 +3,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from staff.models import Staff
+from staff.permissions import IsOwner
 from .models import Hotel
 from .serializers import HotelSerializer
 
 
+
 class HotelAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request):
 

@@ -7,10 +7,11 @@ from .models import StaffInvitation ,Staff
 from .serializers import StaffInvitationSerializer, AcceptInvitationSerializer
 from accounts.models import User
 from django.core.mail import send_mail
+from .permissions import IsOwner
 
 class StaffInvitationAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get(self, request):
 

@@ -6,10 +6,11 @@ from rest_framework.response import Response
 from rooms.models import Room
 from payments.models import Payment
 from reservations.models import Reservation
+from staff.permissions import IsManagerOrOwner
 
 class RevenueReportAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsManagerOrOwner]
 
     def get(self, request):
 
@@ -26,7 +27,7 @@ class RevenueReportAPIView(APIView):
         return Response(data)
 class OccupancyReportAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsManagerOrOwner]
 
     def get(self, request):
 
@@ -64,7 +65,7 @@ class OccupancyReportAPIView(APIView):
         })
 class ReservationReportAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsManagerOrOwner]
 
     def get(self, request):
 

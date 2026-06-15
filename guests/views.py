@@ -5,11 +5,13 @@ from rest_framework import status
 
 from .models import Guest
 from .serializers import GuestSerializer
+from staff.permissions import IsReceptionistOrAbove
+
 
 
 class GuestListCreateAPIView(APIView):
     
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsReceptionistOrAbove]
 
     def get(self, request):
 
@@ -47,7 +49,7 @@ class GuestListCreateAPIView(APIView):
 
 class GuestDetailAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsReceptionistOrAbove]
 
     def get_object(self, request, pk):
 

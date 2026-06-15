@@ -2,9 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.shortcuts import (
-    get_object_or_404
-)
+from django.shortcuts import (get_object_or_404)
+from staff.permissions import IsCashierOrOwner
 
 from .models import Payment
 from .serializers import PaymentSerializer
@@ -14,7 +13,8 @@ class PaymentListCreateAPIView(
 ):
 
     permission_classes = [
-        IsAuthenticated
+        IsAuthenticated,
+        IsCashierOrOwner
     ]
 
     def get(self, request):
@@ -54,7 +54,8 @@ class PaymentDetailAPIView(
 ):
 
     permission_classes = [
-        IsAuthenticated
+        IsAuthenticated,
+        IsCashierOrOwner
     ]
 
     def get(self, request, pk):

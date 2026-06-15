@@ -2,14 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
+from staff.permissions import (IsHousekeepingOrOwner)
 from .models import HousekeepingTask
 from .serializers import HousekeepingTaskSerializer
 
 
 class HousekeepingTaskListCreateAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsHousekeepingOrOwner]
 
     def get(self, request):
 
@@ -45,7 +45,7 @@ class HousekeepingTaskListCreateAPIView(APIView):
         )
 class HousekeepingTaskDetailAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsHousekeepingOrOwner]
 
     def get_object(self, request, pk):
 
