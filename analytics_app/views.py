@@ -9,11 +9,12 @@ from rooms.models import Room
 from reservations.models import Reservation
 
 from .serializers import AnalyticsSerializer
+from staff.permissions import IsManagerOrOwner
 
 
 class AnalyticsAPIView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsManagerOrOwner]
 
     def get(self, request):
 
