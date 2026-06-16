@@ -113,8 +113,7 @@ class AcceptInvitationAPIView(APIView):
             email=invitation.email,
             password=serializer.validated_data[
                 "password"
-            ],
-            role=invitation.role
+            ]
         )
 
         Staff.objects.create(

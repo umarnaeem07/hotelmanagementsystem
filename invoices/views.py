@@ -16,6 +16,7 @@ class CreateInvoiceAPIView(APIView):
 
     def post(self, request, reservation_id):
 
+
         reservation = get_object_or_404(
             Reservation,
             pk=reservation_id,
@@ -32,7 +33,29 @@ class CreateInvoiceAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        subtotal = reservation.total_amount
+        # ----------------------------
+        # Calculate room charges
+        # ----------------------------
+        room_total = (
+            reservation.total_amount
+        )
+
+        # ----------------------------
+        # Calculate service charges
+        # ----------------------------
+        services_total = sum(
+            service.total_price
+            for service in
+            reservation.services.all()
+        )
+
+        # ----------------------------
+        # Calculate subtotal
+        # ----------------------------
+        subtotal = (
+            room_total +
+            services_total
+        )
 
         tax_percentage = (
             request.user.hotel
@@ -41,16 +64,19 @@ class CreateInvoiceAPIView(APIView):
         )
 
         tax_amount = (
-            subtotal * tax_percentage
+            subtotal *
+            tax_percentage
         ) / 100
 
         total_amount = (
-            subtotal + tax_amount
+            subtotal +
+            tax_amount
         )
 
         invoice = Invoice.objects.create(
             reservation=reservation,
-            invoice_number=f"INV-{reservation.id}",
+            invoice_number=
+            f"INV-{reservation.id}",
             subtotal=subtotal,
             tax_amount=tax_amount,
             total_amount=total_amount
