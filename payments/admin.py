@@ -6,12 +6,12 @@ from .models import Payment
 class PaymentAdmin(admin.ModelAdmin):
 
     list_display = (
-        "id",
-        "reservation",
-        "amount",
-        "payment_method",
-        "paid_at",
-    )
+    "id",
+    "invoice",
+    "amount",
+    "payment_method",
+    "paid_at",
+)
 
     list_filter = (
         "payment_method",
@@ -19,7 +19,7 @@ class PaymentAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        "reservation__id",
-        "transaction_reference",
-    )
+    "invoice__invoice_number",
+    "transaction_reference",
+)
 admin.site.register(Payment, PaymentAdmin)

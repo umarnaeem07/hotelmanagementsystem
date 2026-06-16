@@ -20,9 +20,9 @@ class PaymentListCreateAPIView(
     def get(self, request):
 
         payments = Payment.objects.filter(
-            reservation__hotel=
-            request.user.hotel
-        )
+        invoice__reservation__hotel=
+        request.user.hotel
+    )
 
         serializer = PaymentSerializer(
             payments,
@@ -43,7 +43,26 @@ class PaymentListCreateAPIView(
             raise_exception=True
         )
 
-        serializer.save()
+        # serializer.save()
+        payment = serializer.save(
+            received_by=request.user
+        )
+
+        invoice = payment.invoice
+
+        total_paid = sum(
+            p.amount
+            for p in invoice.payments.all()
+        )
+
+        if total_paid >= invoice.total_amount:
+            invoice.payment_status = "paid"
+            invoice.save()
+
+            if invoice.invoice_type == "room":
+                reservation = invoice.reservation
+                reservation.payment_status = "paid"
+                reservation.save()
 
         return Response(
             serializer.data,
@@ -63,7 +82,7 @@ class PaymentDetailAPIView(
         payment = get_object_or_404(
             Payment,
             pk=pk,
-            reservation__hotel=
+            invoice__reservation__hotel=
             request.user.hotel
         )
 

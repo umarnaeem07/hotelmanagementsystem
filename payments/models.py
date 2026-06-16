@@ -9,8 +9,8 @@ class Payment(models.Model):
         ("bank_transfer", "Bank Transfer"),
     )
 
-    reservation = models.ForeignKey(
-        "reservations.Reservation",
+    invoice = models.ForeignKey(
+        "invoices.Invoice",
         on_delete=models.CASCADE,
         related_name="payments"
     )
@@ -34,12 +34,19 @@ class Payment(models.Model):
         blank=True
     )
 
+    received_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
     paid_at = models.DateTimeField(
         auto_now_add=True
     )
 
     def __str__(self):
         return (
-            f"{self.reservation.id} - "
+            f"{self.invoice.invoice_number} - "
             f"{self.amount}"
         )

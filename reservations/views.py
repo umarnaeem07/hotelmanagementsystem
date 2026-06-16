@@ -11,6 +11,7 @@ from services.models import (
     ReservationService
 )
 from django.shortcuts import get_object_or_404
+from invoices.models import Invoice
 
 
 class ReservationListCreateAPIView(APIView):
@@ -131,71 +132,135 @@ class ReservationDetailAPIView(APIView):
 
 class CheckInAPIView(APIView):
 
-    permission_classes = [IsAuthenticated,IsReceptionistOrAbove]
+    permission_classes = [
+        IsAuthenticated,
+        IsReceptionistOrAbove
+    ]
 
     def post(self, request, pk):
 
-        reservation = Reservation.objects.get(
+        reservation = get_object_or_404(
+            Reservation,
             pk=pk,
             hotel=request.user.hotel
         )
 
+        # STEP 1: Only reserved bookings
         if reservation.status != "reserved":
-
             return Response(
                 {
-                    "message":
-                    "Only reserved bookings can be checked in."
+                    "message": "Only reserved bookings can be checked in."
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # STEP 2: Get ROOM invoice
+        room_invoice = Invoice.objects.filter(
+            reservation=reservation,
+            invoice_type="room"
+        ).first()
+
+        if not room_invoice:
+            return Response(
+                {
+                    "message": "Room invoice not found."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # STEP 3: STRICT PAYMENT CHECK
+        if room_invoice.payment_status != "paid":
+            return Response(
+                {
+                    "message": "Check-in denied. Full payment required."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # STEP 4: CHECK-IN
         reservation.status = "checked_in"
         reservation.save()
 
+        # STEP 5: ROOM STATUS UPDATE
         room = reservation.room
         room.status = "occupied"
         room.save()
 
         return Response(
             {
-                "message":
-                "Guest checked in successfully."
-            }
+                "message": "Guest checked in successfully."
+            },
+            status=status.HTTP_200_OK
         )
 class CheckOutAPIView(APIView):
 
-    permission_classes = [IsAuthenticated,IsReceptionistOrAbove]
+    permission_classes = [
+        IsAuthenticated,
+        IsReceptionistOrAbove
+    ]
 
     def post(self, request, pk):
 
-        reservation = Reservation.objects.get(
+        reservation = get_object_or_404(
+            Reservation,
             pk=pk,
             hotel=request.user.hotel
         )
 
+        # STEP 1: Must be checked in
         if reservation.status != "checked_in":
-
             return Response(
                 {
-                    "message":
-                    "Guest is not checked in."
+                    "message": "Only checked-in guests can check out."
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # STEP 2: Get ALL invoices
+        invoices = Invoice.objects.filter(
+            reservation=reservation
+        )
+
+        if not invoices.exists():
+            return Response(
+                {
+                    "message": "No invoices found for this reservation."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # STEP 3: Check unpaid invoices
+        unpaid_invoices = invoices.filter(
+            payment_status="unpaid"
+        )
+
+        if unpaid_invoices.exists():
+            return Response(
+                {
+                    "message": (
+                        "Check-out blocked. "
+                        "All invoices must be paid before checkout."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # STEP 4: UPDATE STATUS
         reservation.status = "checked_out"
         reservation.save()
 
+        # STEP 5: FREE ROOM
         room = reservation.room
         room.status = "available"
         room.save()
 
         return Response(
             {
-                "message":
-                "Guest checked out successfully."
-            }
+                "message": "Check-out successful.",
+                "reservation_id": reservation.id,
+                "status": reservation.status
+            },
+            status=status.HTTP_200_OK
         )
 class ReservationServiceAPIView(
     APIView

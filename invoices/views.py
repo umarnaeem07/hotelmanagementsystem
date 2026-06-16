@@ -23,12 +23,13 @@ class CreateInvoiceAPIView(APIView):
             hotel=request.user.hotel
         )
 
-        if hasattr(reservation, "invoice"):
-
+        if Invoice.objects.filter(
+            reservation=reservation,
+            invoice_type="room"
+        ).exists():
             return Response(
                 {
-                    "message":
-                    "Invoice already exists"
+                    "message": "Room invoice already exists."
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
@@ -74,13 +75,15 @@ class CreateInvoiceAPIView(APIView):
         )
 
         invoice = Invoice.objects.create(
-            reservation=reservation,
-            invoice_number=
-            f"INV-{reservation.id}",
-            subtotal=subtotal,
-            tax_amount=tax_amount,
-            total_amount=total_amount
-        )
+                reservation=reservation,
+                invoice_type="room",
+                invoice_number=f"ROOM-{reservation.id}",
+                subtotal=subtotal,
+                tax_amount=tax_amount,
+                total_amount=total_amount,
+                payment_status="unpaid"
+            )
+        
 
         serializer = InvoiceSerializer(
             invoice
