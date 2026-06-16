@@ -3,9 +3,14 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Reservation
-from .serializers import ReservationSerializer
+from .serializers import ReservationSerializer, ReservationServiceSerializer
 from rest_framework.views import APIView
 from staff.permissions import IsReceptionistOrAbove
+from services.models import (
+    HotelService,
+    ReservationService
+)
+from django.shortcuts import get_object_or_404
 
 
 class ReservationListCreateAPIView(APIView):
@@ -191,4 +196,126 @@ class CheckOutAPIView(APIView):
                 "message":
                 "Guest checked out successfully."
             }
+        )
+class ReservationServiceAPIView(
+    APIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(
+        self,
+        request,
+        reservation_id
+    ):
+
+        reservation = get_object_or_404(
+            Reservation,
+            pk=reservation_id,
+            hotel=request.user.hotel
+        )
+
+        serializer = (
+            ReservationServiceSerializer(
+                data=request.data
+            )
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        service = serializer.validated_data[
+            "service"
+        ]
+
+        # Make sure the selected
+        # service belongs to this hotel.
+        if (
+            service.hotel !=
+            request.user.hotel
+        ):
+            return Response(
+                {
+                    "message":
+                    "Invalid hotel service."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer.save(
+            reservation=reservation
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
+    def get(
+        self,
+        request,
+        reservation_id
+    ):
+
+        reservation = get_object_or_404(
+            Reservation,
+            pk=reservation_id,
+            hotel=request.user.hotel
+        )
+
+        services = (
+            ReservationService.objects.filter(
+                reservation=reservation
+            )
+        )
+
+        serializer = (
+            ReservationServiceSerializer(
+                services,
+                many=True
+            )
+        )
+
+        return Response(
+            serializer.data
+        )
+class ReservationServiceDetailAPIView(
+    APIView
+):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def delete(
+        self,
+        request,
+        reservation_id,
+        service_id
+    ):
+
+        reservation = get_object_or_404(
+            Reservation,
+            pk=reservation_id,
+            hotel=request.user.hotel
+        )
+
+        reservation_service = (
+            get_object_or_404(
+                ReservationService,
+                pk=service_id,
+                reservation=reservation
+            )
+        )
+
+        reservation_service.delete()
+
+        return Response(
+            {
+                "message":
+                "Service removed successfully."
+            },
+            status=status.HTTP_204_NO_CONTENT
         )

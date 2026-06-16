@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import Reservation
-
+from services.models import ReservationService, HotelService
 
 class ReservationSerializer(serializers.ModelSerializer):
 
@@ -67,3 +67,30 @@ class ReservationSerializer(serializers.ModelSerializer):
             )
 
         return attrs
+class ReservationServiceSerializer(
+    serializers.ModelSerializer
+):
+
+    service_name = serializers.CharField(
+        source="service.name",
+        read_only=True
+    )
+
+    class Meta:
+
+        model = ReservationService
+
+        fields = (
+            "id",
+            "service",
+            "service_name",
+            "quantity",
+            "total_price",
+            "created_at",
+        )
+
+        read_only_fields = (
+            "id",
+            "total_price",
+            "created_at",
+        )

@@ -3,7 +3,10 @@ from .views import CheckInAPIView,CheckOutAPIView
 from .views import (
     ReservationListCreateAPIView,
     ReservationDetailAPIView,
+    ReservationServiceAPIView,
+    ReservationServiceDetailAPIView 
 )
+
 
 urlpatterns = [
 
@@ -28,5 +31,15 @@ urlpatterns = [
         "reservations/<int:pk>/check-out/",
         CheckOutAPIView.as_view(),
         name="check-out"
+    ),
+    path(
+        "reservations/<int:reservation_id>/services/",
+        ReservationServiceAPIView.as_view(),
+        name="reservation-services"
+    ),
+    path(
+        "reservations/<int:reservation_id>/services/<int:service_id>/",
+        ReservationServiceDetailAPIView.as_view(),
+        name="reservation-service-detail"
     ),
 ]
