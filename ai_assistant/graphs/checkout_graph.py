@@ -211,5 +211,5 @@ workflow.add_edge(
     "decision",
     END
 )
-graph = workflow.compile()
+checkout_graph = workflow.compile()
 

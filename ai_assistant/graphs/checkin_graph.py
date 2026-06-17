@@ -1,5 +1,21 @@
+from typing import TypedDict
 from reservations.models import Reservation
 from invoices.models import Invoice
+from langgraph.graph import StateGraph
+from ai_assistant.llm import llm
+
+
+class CheckInState(TypedDict):
+
+    reservation_id: int
+
+    reservation_exists: bool
+
+    invoice_paid: bool
+
+    room_available: bool
+
+    decision: str
 
 
 def check_reservation(state):
@@ -96,3 +112,48 @@ def make_decision(state):
     )
 
     return state
+
+builder = StateGraph(
+    CheckInState
+)
+
+builder.add_node(
+    "reservation",
+    check_reservation
+)
+
+builder.add_node(
+    "invoice",
+    check_invoice
+)
+
+builder.add_node(
+    "room",
+    check_room
+)
+
+builder.add_node(
+    "decision",
+    make_decision
+)
+
+builder.set_entry_point(
+    "reservation"
+)
+
+builder.add_edge(
+    "reservation",
+    "invoice"
+)
+
+builder.add_edge(
+    "invoice",
+    "room"
+)
+
+builder.add_edge(
+    "room",
+    "decision"
+)
+
+checkin_graph = builder.compile()

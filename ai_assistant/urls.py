@@ -1,17 +1,12 @@
-from django.urls import path
+# ai_assistant/urls.py
 
-from .views import (
-    CheckInEligibilityAPIView,
-    CheckoutEligibilityAPIView
-)
+from django.urls import path
+from .views import ChatAPIView
 
 urlpatterns = [
     path(
-        "check-in-eligibility/",
-        CheckInEligibilityAPIView.as_view()
-    ),
-    path(
-        "checkout-eligibility/",
-        CheckoutEligibilityAPIView.as_view()
+        "chat/",
+        ChatAPIView.as_view(),
+        name="chat"
     ),
 ]

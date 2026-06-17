@@ -3,60 +3,29 @@ from rest_framework.response import Response
 from .extractor import (
     extract_reservation_id
 )
-from .graph import graph
-from .responder import (
-    generate_answer
-)
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-from .graphs.checkout_graph import graph
-class CheckInEligibilityAPIView(
-    APIView
-):
+from .router.chat_router import chat_router
+
+
+class ChatAPIView(APIView):
 
     def post(self, request):
 
-        # reservation_id = request.data.get(
-        #     "reservation_id"
-        # )
-        question = request.data.get(
-                    "question"
-                )
+        question = request.data.get("question")
 
-        reservation_id = (
-                    extract_reservation_id(
-                        question))
-
-        result = graph.invoke(
+        result = chat_router.invoke(
             {
-                "reservation_id":
-                reservation_id
+                "question": question,
+                "hotel_id": request.user.hotel.id,
             }
         )
 
-        answer = generate_answer(
-            question,
-            result
-        )
-
-        return Response(answer)
-
-class CheckoutEligibilityAPIView(
-    APIView
-):
-
-    def post(self, request):
-
-        reservation_id = request.data.get(
-            "reservation_id"
-        )
-
-        result = graph.invoke(
+        return Response(
             {
-                "reservation_id":
-                reservation_id,
-
-                "steps": []
+                "answer": result["answer"],
+                "intent": result["intent"],
+                "raw_result": result["result"],
             }
-        )
-
-        return Response(result)
+            )
