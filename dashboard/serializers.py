@@ -16,3 +16,5 @@ class DashboardSerializer(serializers.Serializer):
     today_checkouts = serializers.IntegerField()
 
     pending_housekeeping_tasks = serializers.IntegerField()
+
+    unpaid_invoices_count = serializers.IntegerField()

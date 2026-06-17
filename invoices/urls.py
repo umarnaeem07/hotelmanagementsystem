@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     CreateInvoiceAPIView,
+    GenerateAdditionalInvoiceAPIView,
     InvoiceDetailAPIView,
 )
 
@@ -18,4 +19,9 @@ urlpatterns = [
         InvoiceDetailAPIView.as_view(),
         name="invoice-detail"
     ),
+    path(
+    "generate-additional/<int:reservation_id>/",
+    GenerateAdditionalInvoiceAPIView.as_view(),
+    name="generate-additional-invoice"
+),
 ]

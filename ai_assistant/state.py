@@ -12,3 +12,4 @@ class CheckInState(TypedDict):
     room_available: bool
 
     decision: str
+

@@ -12,6 +12,7 @@ class Invoice(models.Model):
         ("unpaid", "Unpaid"),
         ("paid", "Paid"),
     )
+    
 
     reservation = models.ForeignKey(
         "reservations.Reservation",

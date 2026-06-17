@@ -48,12 +48,14 @@ class ReservationSerializer(serializers.ModelSerializer):
 
         # Prevent double booking
         reservations = Reservation.objects.filter(
-            room=room,
-            check_in__lt=check_out,
-            check_out__gt=check_in,
-        ).exclude(
-            status="cancelled"
-        )
+                room=room,
+                status__in=[
+                    "reserved",
+                    "checked_in",
+                ],
+                check_in__lt=check_out,
+                check_out__gt=check_in,
+            )
 
         # Ignore current reservation during update
         if self.instance:

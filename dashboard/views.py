@@ -8,7 +8,7 @@ from rooms.models import Room
 from guests.models import Guest
 from reservations.models import Reservation
 from housekeeping.models import HousekeepingTask
-
+from invoices.models import Invoice
 from .serializers import DashboardSerializer
 
 
@@ -49,12 +49,12 @@ class DashboardAPIView(APIView):
         ).count()
 
         active_reservations = Reservation.objects.filter(
-            hotel=hotel,
-            status__in=[
-                "confirmed",
-                "checked_in"
-            ]
-        ).count()
+                hotel=hotel,
+                status__in=[
+                    "reserved",
+                    "checked_in"
+                ]
+            ).count()
 
         today = date.today()
 
@@ -75,6 +75,10 @@ class DashboardAPIView(APIView):
                 # completed=False
             ).count()
         )
+        unpaid_invoices_count = Invoice.objects.filter(
+                    reservation__hotel=hotel,
+                    payment_status="unpaid"
+                ).count()
 
         data = {
             "total_rooms": total_rooms,
@@ -87,6 +91,7 @@ class DashboardAPIView(APIView):
             "today_checkins": today_checkins,
             "today_checkouts": today_checkouts,
             "pending_housekeeping_tasks": pending_housekeeping_tasks,
+            "unpaid_invoices_count": unpaid_invoices_count,
         }
 
         serializer = DashboardSerializer(data)
