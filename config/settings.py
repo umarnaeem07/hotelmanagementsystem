@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'reports',
     'staff',
     'services',
+    'ai_assistant',
     
 ]
 
@@ -185,3 +186,7 @@ DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL"
 )
 FRONTEND_URL = os.getenv("FRONTEND_URL")
+
+OPENROUTER_API_KEY = os.getenv(
+    "OPENROUTER_API_KEY"
+)
