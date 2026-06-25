@@ -8,6 +8,7 @@ from .serializers import StaffInvitationSerializer, AcceptInvitationSerializer
 from accounts.models import User
 from django.core.mail import send_mail
 from .permissions import IsOwner
+from activity_logs.services import log_activity
 
 class StaffInvitationAPIView(APIView):
 
@@ -41,6 +42,18 @@ class StaffInvitationAPIView(APIView):
             hotel=request.user.hotel,
             invited_by=request.user
         )
+        log_activity(
+                hotel=request.user.hotel,
+                user=request.user,
+                action="invited",
+                object_type="StaffInvitation",
+                object_id=invitation.id,
+                description=(
+                    f"Invitation sent to "
+                    f"{invitation.email} "
+                    f"for role {invitation.role}"
+                )
+            )
         # Create invitation link
         invite_link = (
             f"{settings.FRONTEND_URL}/"
@@ -116,14 +129,27 @@ class AcceptInvitationAPIView(APIView):
             ]
         )
 
-        Staff.objects.create(
+        staff = Staff.objects.create(
             hotel=invitation.hotel,
             user=user,
             role=invitation.role
         )
+        log_activity(
+            hotel=invitation.hotel,
+            user=user,
+            action="created",
+            object_type="Staff",
+            object_id=staff.id,
+            description=(
+                f"{user.username} joined as "
+                f"{staff.role}"
+            )
+        )
 
         invitation.accepted = True
         invitation.save()
+
+        
 
         return Response(
             {

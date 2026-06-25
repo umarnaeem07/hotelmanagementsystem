@@ -6,6 +6,7 @@ from rest_framework import status
 from .models import Guest
 from .serializers import GuestSerializer
 from staff.permissions import IsReceptionistOrAbove
+from activity_logs.services import log_activity
 
 
 
@@ -28,6 +29,8 @@ class GuestListCreateAPIView(APIView):
 
     def post(self, request):
 
+        
+
         serializer = GuestSerializer(
             data=request.data,
             context={"request": request}
@@ -37,8 +40,19 @@ class GuestListCreateAPIView(APIView):
             raise_exception=True
         )
 
-        serializer.save(
+        guest  = serializer.save(
             hotel=request.user.hotel
+        )
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="created",
+            object_type="Guest",
+            object_id=guest.id,
+            description=(
+                f"Guest {guest.first_name} "
+                f"{guest.last_name} created"
+            )
         )
 
         return Response(
@@ -89,6 +103,17 @@ class GuestDetailAPIView(APIView):
         )
 
         serializer.save()
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="updated",
+            object_type="Guest",
+            object_id=guest.id,
+            description=(
+                f"Guest {guest.first_name} "
+                f"{guest.last_name} updated"
+            )
+        )
 
         return Response(serializer.data)
 
@@ -98,8 +123,23 @@ class GuestDetailAPIView(APIView):
             request,
             pk
         )
+        guest_name = (
+            f"{guest.first_name} "
+            f"{guest.last_name}"
+        )
 
         guest.delete()
+
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="deleted",
+            object_type="Guest",
+            object_id=guest.id,
+            description=(
+                f"Guest {guest_name} deleted"
+            )
+        )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT

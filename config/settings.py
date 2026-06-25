@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'services',
     'ai_assistant',
     'chat',
+    'activity_logs',
     
 ]
 

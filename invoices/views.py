@@ -9,6 +9,7 @@ from reservations.models import Reservation
 from services.models import ReservationService
 from .models import Invoice
 from .serializers import InvoiceSerializer
+from activity_logs.services import log_activity
 
 class CreateInvoiceAPIView(APIView):
 
@@ -68,6 +69,19 @@ class CreateInvoiceAPIView(APIView):
                 total_amount=total_amount,
                 payment_status="unpaid"
             )
+        log_activity(
+            
+                hotel=request.user.hotel,
+                user=request.user,
+                action="created",
+                object_type="Invoice",
+                object_id=invoice.id,
+                description=(
+                    f"Room invoice created "
+                    f"for reservation #{reservation.id}"
+                )
+            )
+        
         
 
         serializer = InvoiceSerializer(
@@ -185,10 +199,22 @@ class GenerateAdditionalInvoiceAPIView(
 
             payment_status="unpaid"
         )
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="created",
+            object_type="Invoice",
+            object_id=invoice.id,
+            description=(
+                f"Room invoice created "
+                f"for reservation #{reservation.id}"
+            )
+        )
 
         serializer = InvoiceSerializer(
             invoice
         )
+        
 
         return Response(
             serializer.data,

@@ -12,6 +12,9 @@ from services.models import (
 )
 from django.shortcuts import get_object_or_404
 from invoices.models import Invoice
+from activity_logs.services import (
+    log_activity
+)
 
 
 class ReservationListCreateAPIView(APIView):
@@ -56,6 +59,14 @@ class ReservationListCreateAPIView(APIView):
         )
 
         reservation.save()
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="created",
+            object_type="Reservation",
+            object_id=reservation.id,
+            description=f"Reservation created for {reservation.id}"
+        )
 
         return Response(
             ReservationSerializer(reservation).data,
@@ -114,7 +125,14 @@ class ReservationDetailAPIView(APIView):
         )
 
         reservation.save()
-
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="updated",
+            object_type="Reservation",
+            object_id=reservation.id,
+            description=f"Reservation updated for {reservation.id}"
+        )
         return Response(serializer.data)
 
     def delete(self, request, pk):
@@ -124,6 +142,14 @@ class ReservationDetailAPIView(APIView):
             pk
         )
 
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="deleted",
+            object_type="Reservation",
+            object_id=reservation.id,
+            description=f"Reservation deleted for {reservation.id}"
+        )
         reservation.delete()
 
         return Response(
@@ -181,10 +207,21 @@ class CheckInAPIView(APIView):
         reservation.status = "checked_in"
         reservation.save()
 
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="checked_in",
+            object_type="Reservation",
+            object_id=reservation.id,
+            description=f"Guest checked in for {reservation.id}"
+        )
+
         # STEP 5: ROOM STATUS UPDATE
         room = reservation.room
         room.status = "occupied"
         room.save()
+
+        
 
         return Response(
             {
@@ -249,6 +286,15 @@ class CheckOutAPIView(APIView):
         reservation.status = "checked_out"
         reservation.save()
 
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="checked_out",
+            object_type="Reservation",
+            object_id=reservation.id,
+            description=f"Guest checked out for {reservation.id}"
+        )
+
         # STEP 5: FREE ROOM
         room = reservation.room
         room.status = "available"
@@ -309,10 +355,20 @@ class ReservationServiceAPIView(
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        serializer.save(
+        reservation_service = serializer.save(
             reservation=reservation
         )
+
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="created",
+            object_type="ReservationService",
+            object_id=reservation_service.id,
+            description=f"Service added to reservation for {reservation.id}"
+        )
+
+        
 
         return Response(
             serializer.data,
@@ -353,6 +409,35 @@ class ReservationServiceDetailAPIView(
     permission_classes = [
         IsAuthenticated
     ]
+    def get(
+        self,
+        request,
+        reservation_id,
+        service_id
+    ):
+        
+
+        reservation = get_object_or_404(
+            Reservation,
+            pk=reservation_id,
+            hotel=request.user.hotel
+        )
+
+        reservation_service = (
+            get_object_or_404(
+                ReservationService,
+                pk=service_id,
+                reservation=reservation
+            )
+        )
+
+        serializer = (
+            ReservationServiceSerializer(
+                reservation_service
+            )
+        )
+
+        return Response(serializer.data)
 
     def delete(
         self,
@@ -376,6 +461,15 @@ class ReservationServiceDetailAPIView(
         )
 
         reservation_service.delete()
+    
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="deleted",
+            object_type="ReservationService",
+            object_id=reservation_service.id,
+            description=f"Service removed from reservation for {reservation.id}"
+        )
 
         return Response(
             {

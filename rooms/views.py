@@ -7,6 +7,7 @@ from staff.permissions import IsManagerOrOwner
 
 from .models import Room
 from .serializers import RoomSerializer
+from activity_logs.services import log_activity
 
 
 class RoomListCreateAPIView(APIView):
@@ -27,6 +28,9 @@ class RoomListCreateAPIView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        # room = Room.objects.filter(
+        #     hotel=request.user.hotel
+        # )
 
         serializer = RoomSerializer(
             data=request.data,
@@ -37,9 +41,20 @@ class RoomListCreateAPIView(APIView):
             raise_exception=True
         )
 
-        serializer.save(
+        room = serializer.save(
             hotel=request.user.hotel
         )
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="created",
+            object_type="Room",
+            object_id=room.id,
+            description=(
+                f"Room {room.room_number} created"
+            )
+        )
+        
 
         return Response(
             serializer.data,
@@ -86,6 +101,17 @@ class RoomDetailAPIView(APIView):
 
         serializer.save()
 
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="updated",
+            object_type="Room",
+            object_id=room.id,
+            description=(
+                f"Room {room.room_number} updated"
+            )
+        )
+
         return Response(serializer.data)
 
     def delete(self, request, pk):
@@ -94,8 +120,19 @@ class RoomDetailAPIView(APIView):
             request,
             pk
         )
+        room_number = room.room_number
 
         room.delete()
+        log_activity(
+            hotel=request.user.hotel,
+            user=request.user,
+            action="deleted",
+            object_type="Room",
+            object_id=room.id,
+            description=(
+                f"Room {room_number} deleted"
+            )
+        )
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
