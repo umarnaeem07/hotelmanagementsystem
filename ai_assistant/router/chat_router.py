@@ -5,9 +5,18 @@ from ai_assistant.extractor import (
     extract_reservation_id
 )
 
+from chat.models import ChatSession
+from chat.services import (
+    get_recent_messages,
+    get_last_reservation_id
+)
 class ChatState(TypedDict):
 
+    session_id: int
+
     question: str
+
+    context: str
 
     intent: str
 
@@ -26,6 +35,30 @@ from ai_assistant.router.intent_classifier import (
     classify_intent
 )
 
+def load_memory(state):
+
+    session = ChatSession.objects.get(
+        pk=state["session_id"]
+    )
+
+    messages = get_recent_messages(
+        session
+    )
+
+    context = ""
+
+    for msg in reversed(messages):
+
+        context += (
+            f"{msg.role}: "
+            f"{msg.content}\n"
+        )
+
+    state["context"] = context
+
+    return state
+
+
 def detect_intent(state):
 
     state["intent"] = classify_intent(
@@ -35,9 +68,27 @@ def detect_intent(state):
     return state
 def extract_entities(state):
 
-    state["reservation_id"] = (
+    reservation_id = (
         extract_reservation_id(
             state["question"]
+        )
+    )
+
+    if reservation_id:
+
+        state["reservation_id"] = (
+            reservation_id
+        )
+
+        return state
+
+    session = ChatSession.objects.get(
+        pk=state["session_id"]
+    )
+
+    state["reservation_id"] = (
+        get_last_reservation_id(
+            session
         )
     )
 
@@ -170,13 +221,19 @@ def generate_response(state):
     result = state["result"]
 
     prompt = f"""
-Question:
+Conversation History:
+
+{state['context']}
+
+Current Question:
+
 {state['question']}
 
 System Result:
+
 {result}
 
-Explain the answer naturally.
+Answer naturally.
 """
 
     response = llm.invoke(prompt)
@@ -193,6 +250,11 @@ from langgraph.graph import (
 )
 
 builder = StateGraph(ChatState)
+
+builder.add_node(
+    "load_memory",
+    load_memory
+)
 
 builder.add_node(
     "detect_intent",
@@ -215,6 +277,12 @@ builder.add_node(
 )
 
 builder.set_entry_point(
+    "load_memory"
+
+)
+
+builder.add_edge(
+    "load_memory",
     "detect_intent"
 )
 

@@ -1,24 +1,40 @@
-from .llm import llm
+# from .llm import llm
 
 
-def extract_reservation_id(
-    question
-):
+# def extract_reservation_id(
+#     question
+# ):
 
-    prompt = f"""
-    Extract the reservation number
-    from this question.
+#     prompt = f"""
+#     Extract the reservation number
+#     from this question.
 
-    Question:
-    {question}
+#     Question:
+#     {question}
 
-    Return ONLY the number.
-    """
+#     Return ONLY the number.
+#     """
 
-    response = llm.invoke(
-        prompt
+#     response = llm.invoke(
+#         prompt
+#     )
+
+#     return int(
+#         response.content.strip()
+#     )
+
+
+import re
+
+
+def extract_reservation_id(question):
+
+    match = re.search(
+        r"\b(?:reservation|booking)\s+(\d+)\b",
+        question.lower()
     )
 
-    return int(
-        response.content.strip()
-    )
+    if match:
+        return int(match.group(1))
+
+    return None

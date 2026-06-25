@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'staff',
     'services',
     'ai_assistant',
+    'chat',
     
 ]
 
