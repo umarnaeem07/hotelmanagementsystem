@@ -8,6 +8,7 @@ from accounts.models import User
 from guests.models import Guest
 from hotels.models import Hotel
 from invoices.models import Invoice
+from invoices.views import InvoiceDetailAPIView
 from payments.models import Payment
 from payments.serializers import PaymentSerializer
 from payments.views import PaymentListCreateAPIView
@@ -125,3 +126,20 @@ class PaymentFlowTests(TestCase):
         self.reservation.refresh_from_db()
         self.assertEqual(self.invoice.payment_status, "paid")
         self.assertEqual(self.reservation.payment_status, "paid")
+
+    def test_invoice_detail_patch_updates_payment_status(self):
+        factory = APIRequestFactory()
+        request = factory.patch(
+            f"/api/invoices/{self.invoice.id}/",
+            {"payment_status": "partial"},
+            format="json",
+        )
+        force_authenticate(request, user=self.owner)
+
+        response = InvoiceDetailAPIView.as_view()(request, pk=self.invoice.id)
+
+        self.assertEqual(response.status_code, 200)
+        self.invoice.refresh_from_db()
+        self.reservation.refresh_from_db()
+        self.assertEqual(self.invoice.payment_status, "partial")
+        self.assertEqual(self.reservation.payment_status, "partial")

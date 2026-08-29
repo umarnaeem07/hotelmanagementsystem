@@ -11,15 +11,12 @@ from .serializers import HotelSerializer
 
 class HotelAPIView(APIView):
 
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
 
         try:
-            # hotel = request.user.hotel
-            hotel = Hotel.objects.get(
-                owner=request.user
-            )
+            hotel = Hotel.objects.get(owner=request.user)
             serializer = HotelSerializer(hotel)
 
             return Response(serializer.data)
@@ -31,51 +28,46 @@ class HotelAPIView(APIView):
             )
 
     def post(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {"message": "Authentication required."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
-        if hasattr(request.user, "hotel"):
+        if Hotel.objects.filter(owner=request.user).exists():
             return Response(
                 {"message": "Hotel already exists"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = HotelSerializer(
-            data=request.data
-        )
+        serializer = HotelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        serializer.is_valid(
-            raise_exception=True
-        )
-
-        serializer.save(
-            owner=request.user
-        )
-        # Automatically create owner staff profile
-        Staff.objects.create(
-            hotel=request.user.hotel,
+        hotel = serializer.save(owner=request.user)
+        Staff.objects.get_or_create(
             user=request.user,
-            role="owner"
+            defaults={
+                "hotel": hotel,
+                "role": "owner",
+            },
         )
 
         return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED
+            HotelSerializer(hotel).data,
+            status=status.HTTP_201_CREATED,
         )
 
     def put(self, request):
+        try:
+            hotel = Hotel.objects.get(owner=request.user)
+        except Hotel.DoesNotExist:
+            return Response(
+                {"message": "Hotel profile not found. Please set up your hotel first."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-        hotel = Hotel.objects.get(
-            owner=request.user
-        )
-
-        serializer = HotelSerializer(
-            hotel,
-            data=request.data
-        )
-
-        serializer.is_valid(
-            raise_exception=True
-        )
-
+        serializer = HotelSerializer(hotel, data=request.data)
+        serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response(serializer.data)

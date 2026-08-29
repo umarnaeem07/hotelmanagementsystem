@@ -28,6 +28,5 @@ class InvoiceSerializer(
             "subtotal",
             "tax_amount",
             "total_amount",
-            "payment_status",
             "issued_at",
         )

@@ -49,6 +49,9 @@ class ReservationListCreateAPIView(APIView):
             hotel=request.user.hotel
         )
 
+        reservation.room.status = "reserved"
+        reservation.room.save(update_fields=["status"])
+
         nights = (
             reservation.check_out -
             reservation.check_in
@@ -114,6 +117,14 @@ class ReservationDetailAPIView(APIView):
         )
 
         reservation = serializer.save()
+
+        if reservation.status == "reserved":
+            reservation.room.status = "reserved"
+        elif reservation.status == "checked_in":
+            reservation.room.status = "occupied"
+        elif reservation.status == "checked_out":
+            reservation.room.status = "cleaning"
+        reservation.room.save(update_fields=["status"])
 
         nights = (
             reservation.check_out -
@@ -219,7 +230,7 @@ class CheckInAPIView(APIView):
         # STEP 5: ROOM STATUS UPDATE
         room = reservation.room
         room.status = "occupied"
-        room.save()
+        room.save(update_fields=["status"])
 
         
 
@@ -295,10 +306,10 @@ class CheckOutAPIView(APIView):
             description=f"Guest checked out for {reservation.id}"
         )
 
-        # STEP 5: FREE ROOM
+        # STEP 5: FREE ROOM AND START CLEANING
         room = reservation.room
-        room.status = "available"
-        room.save()
+        room.status = "cleaning"
+        room.save(update_fields=["status"])
 
         return Response(
             {

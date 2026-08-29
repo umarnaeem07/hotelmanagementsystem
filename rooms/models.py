@@ -5,6 +5,7 @@ class Room(models.Model):
 
     STATUS_CHOICES = (
         ("available", "Available"),
+        ("reserved", "Reserved"),
         ("occupied", "Occupied"),
         ("maintenance", "Maintenance"),
         ("cleaning", "Cleaning"),

@@ -3,6 +3,7 @@ from datetime import date
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
 
 from rooms.models import Room
 from guests.models import Guest
@@ -18,7 +19,15 @@ class DashboardAPIView(APIView):
 
     def get(self, request):
 
-        hotel = request.user.hotel
+        hotel = getattr(request.user, "hotel", None)
+
+        if hotel is None:
+            return Response(
+                {
+                    "message": "Hotel profile not found. Please set up your hotel first."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         total_rooms = Room.objects.filter(
             hotel=hotel

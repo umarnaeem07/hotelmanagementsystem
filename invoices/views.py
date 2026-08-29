@@ -112,6 +112,31 @@ class InvoiceDetailAPIView(APIView):
         return Response(
             serializer.data
         )
+
+    def patch(self, request, pk):
+
+        invoice = get_object_or_404(
+            Invoice,
+            pk=pk,
+            reservation__hotel=request.user.hotel
+        )
+
+        serializer = InvoiceSerializer(
+            invoice,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        if invoice.reservation:
+            invoice.reservation.payment_status = invoice.payment_status
+            invoice.reservation.save(update_fields=["payment_status", "updated_at"])
+
+        return Response(
+            InvoiceSerializer(invoice).data
+        )
     
 
 class GenerateAdditionalInvoiceAPIView(
