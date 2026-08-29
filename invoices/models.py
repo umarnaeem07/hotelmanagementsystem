@@ -10,6 +10,7 @@ class Invoice(models.Model):
 
     PAYMENT_STATUS = (
         ("unpaid", "Unpaid"),
+        ("partial", "Partial"),
         ("paid", "Paid"),
     )
     

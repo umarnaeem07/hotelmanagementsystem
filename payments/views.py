@@ -67,9 +67,16 @@ class PaymentListCreateAPIView(
             for p in invoice.payments.all()
         )
 
-        if total_paid >= invoice.total_amount:
+        if total_paid <= 0:
+            invoice.payment_status = "unpaid"
+        elif total_paid < invoice.total_amount:
+            invoice.payment_status = "partial"
+        else:
             invoice.payment_status = "paid"
-            invoice.save()
+
+        invoice.save()
+
+        if invoice.payment_status == "paid":
             log_activity(
                 hotel=request.user.hotel,
                 user=request.user,
@@ -83,25 +90,37 @@ class PaymentListCreateAPIView(
                 )
             )
 
-            if invoice.invoice_type == "room":
-                reservation = invoice.reservation
-                reservation.payment_status = "paid"
-                reservation.save()
+        if invoice.invoice_type == "room":
+            reservation = invoice.reservation
+            reservation.payment_status = invoice.payment_status
+            reservation.save()
 
+            if invoice.payment_status == "paid":
                 log_activity(
-                hotel=request.user.hotel,
-                user=request.user,
-                action="reservation_paid",
-                object_type="Reservation",
-                object_id=reservation.id,
-                description=(
-                    f"Reservation "
-                    f"#{reservation.id} "
-                    f"payment completed"
+                    hotel=request.user.hotel,
+                    user=request.user,
+                    action="reservation_paid",
+                    object_type="Reservation",
+                    object_id=reservation.id,
+                    description=(
+                        f"Reservation "
+                        f"#{reservation.id} "
+                        f"payment completed"
+                    )
                 )
-            )
-
-
+            elif invoice.payment_status == "partial":
+                log_activity(
+                    hotel=request.user.hotel,
+                    user=request.user,
+                    action="reservation_partial_payment",
+                    object_type="Reservation",
+                    object_id=reservation.id,
+                    description=(
+                        f"Reservation "
+                        f"#{reservation.id} "
+                        f"received partial payment"
+                    )
+                )
 
         return Response(
             serializer.data,

@@ -9,10 +9,19 @@ class IsHotelStaff(BasePermission):
         request,
         view
     ):
+        if not request.user or not request.user.is_authenticated:
+            return False
 
-        return Staff.objects.filter(
+        if request.user.is_superuser:
+            return True
+
+        if Staff.objects.filter(
             user=request.user
-        ).exists()
+        ).exists():
+            return True
+
+        hotel = getattr(request.user, "hotel", None)
+        return bool(hotel and hotel.owner_id == request.user.id)
 
 
 class HasRole(BasePermission):
@@ -24,12 +33,20 @@ class HasRole(BasePermission):
         request,
         view
     ):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        if request.user.is_superuser:
+            return True
 
         try:
             staff = Staff.objects.get(
                 user=request.user
             )
         except Staff.DoesNotExist:
+            hotel = getattr(request.user, "hotel", None)
+            if hotel and hotel.owner_id == request.user.id:
+                return "owner" in self.allowed_roles
             return False
 
         return (
